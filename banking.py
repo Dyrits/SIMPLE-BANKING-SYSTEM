@@ -40,8 +40,13 @@ class Card:
 
 
 class Banking:
-    cards = {}
+
+    def __init__(self):
+        pass
+
+    running = False
     logged_in = False
+    cards = {}
     card = None
 
     @staticmethod
@@ -103,19 +108,16 @@ class Banking:
         print("Transfer")
         card_number = input("Enter your card number: \n")
         if card_number == cls.card.number:
-            print("You can't transfer money to the same account!")
-            return cls.display_menu()
+            return print("You can't transfer money to the same account!")
         card = cls.cards.get(card_number)
         if not card:
             check_sum_number = Card.generate_check_sum_number(card_number[:-1])
             if check_sum_number != card_number[-1]:
-                print("Probably you made a mistake in the card number. Please try again!")
-                return cls.display_menu()
+                return print("Probably you made a mistake in the card number. Please try again!")
             cls.db_select(card_number)
             card = cls.cards.get(card_number)
             if not card:
-                print("Such a card does not exist.")
-                return cls.display_menu()
+                return print("Such a card does not exist.")
         amount = int(input("Enter how much money you want to transfer: \n"))
         if amount > cls.card.balance:
             print("Not enough money!")
@@ -125,7 +127,6 @@ class Banking:
             cls.db_update_balance(cls.card, cls.card.balance)
             cls.db_update_balance(card, card.balance)
             print("Success!")
-        cls.display_menu()
 
     @classmethod
     def create_account(cls):
@@ -137,14 +138,13 @@ class Banking:
         print(card.number)
         print("Your card PIN:")
         print(card.pin)
-        cls.display_menu()
 
     @classmethod
     def close_account(cls):
         cls.db_delete(cls.card)
         del cls.cards[cls.card.number]
         print("The account has been closed!")
-        cls.display_menu()
+        cls.logged_in = False
 
     @classmethod
     def add_to_balance(cls):
@@ -152,7 +152,6 @@ class Banking:
         cls.card.balance += amount
         cls.db_update_balance(cls.card, cls.card.balance)
         print("Income was added!")
-        cls.display_menu()
 
     @classmethod
     def login(cls):
@@ -168,49 +167,50 @@ class Banking:
         else:
             print("Wrong card number or PIN!")
             cls.card = None
-        cls.display_menu()
 
     @classmethod
     def logout(cls):
         cls.logged_in = False
         cls.card = None
         print("You have successfully logged out!")
-        cls.display_menu()
 
     @classmethod
     def get_balance(cls):
         print(f"Balance: {cls.card.balance}")
-        cls.display_menu()
 
     @classmethod
     def exit(cls):
         print("Bye!")
+        cls.running = False
 
     @classmethod
     def display_menu(cls):
-        if not cls.logged_in:
-            options = {
-                "1": cls.create_account,
-                "2": cls.login,
-                "0": cls.exit
-            }
-            selection = input("1. Create an account \n2. Log into account \n0. Exit \n")
-        else:
-            options = {
-                "1": cls.get_balance,
-                "2": cls.add_to_balance,
-                "3": cls.do_transfer,
-                "4": cls.close_account,
-                "5": cls.logout,
-                "0": cls.exit
-            }
-            selection = input("1. Balance \n2. Add income \n3. Do transfer \n4. Close account \n5. Log out \n0. Exit \n")
-        print("\n")
-        if options.get(selection):
-            options.get(selection)()
-        else:
-            print("Invalid option!")
-            cls.display_menu()
+        cls.running = True
+        while cls.running:
+            if not cls.logged_in:
+                options = {
+                    "1": cls.create_account,
+                    "2": cls.login,
+                    "0": cls.exit
+                }
+                selection = input("1. Create an account \n2. Log into account \n0. Exit \n")
+            else:
+                options = {
+                    "1": cls.get_balance,
+                    "2": cls.add_to_balance,
+                    "3": cls.do_transfer,
+                    "4": cls.close_account,
+                    "5": cls.logout,
+                    "0": cls.exit
+                }
+                selection = input(
+                    "1. Balance \n2. Add income \n3. Do transfer \n4. Close account \n5. Log out \n0. Exit \n")
+            print()
+            if options.get(selection):
+                options.get(selection)()
+            else:
+                print("Invalid option!")
+            print()
 
 
 if __name__ == "__main__":
